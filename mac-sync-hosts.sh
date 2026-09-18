@@ -1,9 +1,9 @@
 #!/bin/sh
 # Cloudflare Hosts Sync for macOS
 #
-# 从私有 GitHub 仓库拉取 QNAP 已验证的 hosts-map.tsv，校验精确 FQDN/IP，
-# 然后只维护本机 /etc/hosts 的 CF-YX-MAC-SYNC Marker 区域。
-# 不扫描 DNS，不测速，不修改 OpenSurge，也不覆盖其他 Hosts 内容。
+# 从 GitHub 拉取 QNAP 的 hosts-map.tsv，校验精确 FQDN/IP，
+# 清理已知旧脚本 Marker，并在写入前逐域名做真实 HTTPS 检测。
+# 不测速，不修改 OpenSurge，也不覆盖其他 Hosts 内容。
 
 set -eu
 LC_ALL=C
@@ -17,6 +17,13 @@ RAW_BASE_URL=${CLOUDFLARE_HOSTS_RAW_BASE_URL:-https://raw.githubusercontent.com/
 HOSTS_FILE=${CLOUDFLARE_HOSTS_FILE:-/etc/hosts}
 BEGIN_MARKER=${CLOUDFLARE_HOSTS_BEGIN_MARKER:-'# CF-YX-MAC-SYNC-BEGIN'}
 END_MARKER=${CLOUDFLARE_HOSTS_END_MARKER:-'# CF-YX-MAC-SYNC-END'}
+LEGACY_BEGIN_MARKER=${CLOUDFLARE_HOSTS_LEGACY_BEGIN_MARKER:-'# BEGIN PT-CLOUDFLARE-MANAGED'}
+LEGACY_END_MARKER=${CLOUDFLARE_HOSTS_LEGACY_END_MARKER:-'# END PT-CLOUDFLARE-MANAGED'}
+VERIFY_BEFORE_APPLY=${CLOUDFLARE_HOSTS_VERIFY_BEFORE_APPLY:-true}
+VERIFY_RETRIES=${CLOUDFLARE_HOSTS_VERIFY_RETRIES:-1}
+VERIFY_CONNECT_TIMEOUT=${CLOUDFLARE_HOSTS_VERIFY_CONNECT_TIMEOUT:-4}
+VERIFY_MAX_TIME=${CLOUDFLARE_HOSTS_VERIFY_MAX_TIME:-8}
+REJECT_HTTP_CODES=${CLOUDFLARE_HOSTS_REJECT_HTTP_CODES:-000,403}
 
 MODE=apply
 case "${1:-}" in
@@ -38,6 +45,11 @@ Cloudflare Hosts Sync for macOS
   CLOUDFLARE_HOSTS_FETCH_MODE   auto、api 或 raw，默认 auto
   CLOUDFLARE_HOSTS_RAW_BASE_URL 公开仓库时可覆盖 raw 基地址
   CLOUDFLARE_HOSTS_FILE
+  CLOUDFLARE_HOSTS_VERIFY_BEFORE_APPLY  true/false，默认 true
+  CLOUDFLARE_HOSTS_VERIFY_RETRIES       默认 1
+  CLOUDFLARE_HOSTS_VERIFY_CONNECT_TIMEOUT 默认 4 秒
+  CLOUDFLARE_HOSTS_VERIFY_MAX_TIME      默认 8 秒
+  CLOUDFLARE_HOSTS_REJECT_HTTP_CODES    默认 000,403
 EOF
         exit 0
         ;;
@@ -64,6 +76,14 @@ as_root() {
     fi
 }
 
+run_privileged() {
+    if [ "$RUN_AS_ROOT" -eq 1 ]; then
+        as_root "$@"
+    else
+        "$@"
+    fi
+}
+
 require_command awk
 require_command cmp
 require_command date
@@ -75,9 +95,31 @@ if [ ! -r "$HOSTS_FILE" ]; then
     die "Hosts file is not readable: $HOSTS_FILE"
 fi
 
+HOSTS_DIR=${HOSTS_FILE%/*}
+[ "$HOSTS_DIR" = "$HOSTS_FILE" ] && HOSTS_DIR=.
+RUN_AS_ROOT=0
+if [ "$(id -u)" -ne 0 ] && { [ ! -w "$HOSTS_FILE" ] || [ ! -w "$HOSTS_DIR" ]; }; then
+    RUN_AS_ROOT=1
+fi
+
 case "$FETCH_MODE" in
     auto|api|raw) ;;
     *) die "CLOUDFLARE_HOSTS_FETCH_MODE must be auto, api or raw" ;;
+esac
+
+case "$VERIFY_BEFORE_APPLY" in
+    true|false) ;;
+    *) die 'CLOUDFLARE_HOSTS_VERIFY_BEFORE_APPLY must be true or false' ;;
+esac
+case "$VERIFY_RETRIES" in
+    ''|*[!0-9]*) die 'CLOUDFLARE_HOSTS_VERIFY_RETRIES must be a positive integer' ;;
+esac
+[ "$VERIFY_RETRIES" -ge 1 ] || die 'CLOUDFLARE_HOSTS_VERIFY_RETRIES must be at least 1'
+case "$VERIFY_CONNECT_TIMEOUT" in
+    ''|*[!0-9]*) die 'CLOUDFLARE_HOSTS_VERIFY_CONNECT_TIMEOUT must be an integer' ;;
+esac
+case "$VERIFY_MAX_TIME" in
+    ''|*[!0-9]*) die 'CLOUDFLARE_HOSTS_VERIFY_MAX_TIME must be an integer' ;;
 esac
 
 TMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/cloudflare-hosts-sync.XXXXXX") || die 'cannot create temporary directory'
@@ -87,7 +129,9 @@ cleanup() {
 trap cleanup EXIT HUP INT TERM
 
 BLOCK_FILE="$TMP_DIR/hosts.block"
-RAW_BLOCK_FILE="$TMP_DIR/hosts.block.raw"
+MAP_RECORDS_FILE="$TMP_DIR/map.records"
+SORTED_RECORDS_FILE="$TMP_DIR/map.records.sorted"
+VERIFY_LOG="$TMP_DIR/verify.log"
 EXPECTED_FILE="$TMP_DIR/hosts.expected"
 MAP_FILE="$TMP_DIR/hosts-map.tsv"
 STATUS_FILE="$TMP_DIR/status.json"
@@ -124,8 +168,8 @@ fi
 fetch_repo_file status.json "$STATUS_FILE" 2>/dev/null || true
 
 # 只接受 Hosts Manager 的 VERIFIED 或 RETAINED 记录。RETAINED 表示本轮没有
-# 可靠的新候选，所以沿用上一次已应用映射。域名必须是精确 FQDN，禁止协议、
-# 路径、端口、通配符和空格；同一域名只取第一条，避免生成冲突 Hosts。
+# 可靠的新候选，所以沿用上一次已应用映射；但仍必须通过本机实际 HTTPS 检测。
+# 域名必须是精确 FQDN，禁止协议、路径、端口、通配符和空格；同一域名只取第一条。
 if ! awk -F '\t' '
     function valid_domain(d) {
         return d ~ /^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+$/
@@ -144,19 +188,89 @@ if ! awk -F '\t' '
             invalid=1
             next
         }
-        if (!seen[$1]++) print $2 "\t" $1
+        if (!seen[$1]++) print $1 "\t" $2 "\t" $3 "\t" $4 "\t" $5 "\t" $6 "\t" $7 "\t" $8 "\t" $9 "\t" $10
     }
     END { if (invalid) exit 2 }
-' "$MAP_FILE" > "$RAW_BLOCK_FILE"; then
+' "$MAP_FILE" > "$MAP_RECORDS_FILE"; then
     die "hosts-map.tsv contains an invalid or unsupported record"
 fi
 
-LC_ALL=C sort -k2,2 "$RAW_BLOCK_FILE" > "$BLOCK_FILE" || die 'cannot sort verified mappings'
+LC_ALL=C sort -k1,1 "$MAP_RECORDS_FILE" > "$SORTED_RECORDS_FILE" || die 'cannot sort mappings'
+
+http_code_is_rejected() {
+    code=$1
+    case ",$REJECT_HTTP_CODES," in
+        *,"$code",*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+: > "$BLOCK_FILE"
+: > "$VERIFY_LOG"
+verified_count=0
+rejected_count=0
+
+if [ "$MODE" = status ] || [ "$VERIFY_BEFORE_APPLY" = false ]; then
+    awk -F '\t' '{ print $2 "\t" $1 }' "$SORTED_RECORDS_FILE" > "$BLOCK_FILE"
+else
+    require_command curl
+    while IFS="$(printf '\t')" read -r domain ip group delay speed loss colo verified_at source_http_code status; do
+        [ -n "$domain" ] || continue
+        attempt=1
+        last_http_code=000
+        last_reason=connection_or_tls_failure
+        verified=0
+        while [ "$attempt" -le "$VERIFY_RETRIES" ]; do
+            curl_stderr="$TMP_DIR/curl.stderr"
+            resolve_ip=$ip
+            case "$resolve_ip" in
+                *:*) resolve_ip="[$resolve_ip]" ;;
+            esac
+            last_http_code=$(curl --noproxy '*' -sS \
+                --connect-timeout "$VERIFY_CONNECT_TIMEOUT" \
+                --max-time "$VERIFY_MAX_TIME" \
+                --resolve "$domain:443:$resolve_ip" \
+                -o /dev/null -w '%{http_code}' \
+                "https://$domain/" 2>"$curl_stderr" || true)
+            [ -n "$last_http_code" ] || last_http_code=000
+            if [ "$last_http_code" != 000 ] && ! http_code_is_rejected "$last_http_code"; then
+                verified=1
+                last_reason=http_response
+                break
+            fi
+            if [ "$last_http_code" = 000 ]; then
+                last_reason=$(tr '\n' ' ' < "$curl_stderr" | sed 's/[[:space:]][[:space:]]*/ /g' | cut -c 1-180)
+                [ -n "$last_reason" ] || last_reason=connection_or_tls_failure
+            else
+                last_reason=rejected_http_code
+            fi
+            if [ "$attempt" -lt "$VERIFY_RETRIES" ]; then
+                sleep 1
+            fi
+            attempt=$((attempt + 1))
+        done
+
+        if [ "$verified" -eq 1 ]; then
+            printf 'VERIFY %s %s HTTP=%s OK\n' "$domain" "$ip" "$last_http_code" >> "$VERIFY_LOG"
+            printf '%s\t%s\n' "$ip" "$domain" >> "$BLOCK_FILE"
+            verified_count=$((verified_count + 1))
+        else
+            printf 'VERIFY %s %s HTTP=%s FAIL %s\n' "$domain" "$ip" "$last_http_code" "$last_reason" >> "$VERIFY_LOG"
+            rejected_count=$((rejected_count + 1))
+        fi
+    done < "$SORTED_RECORDS_FILE"
+fi
+
+LC_ALL=C sort -k2,2 "$BLOCK_FILE" -o "$BLOCK_FILE" || die 'cannot sort verified mappings'
 
 [ -s "$BLOCK_FILE" ] || die 'hosts-map.tsv has no verified mappings'
 
-# 用 awk 重建期望文件；Marker 外所有内容原样保留。Marker 缺失时追加到末尾。
-if ! awk -v b="$BEGIN_MARKER" -v e="$END_MARKER" -v block="$BLOCK_FILE" '
+# 用 awk 重建期望文件；新 Marker 外所有非旧内容原样保留。
+# 已知旧脚本 PT-CLOUDFLARE-MANAGED 区域只在完整成对出现时移除；如果旧
+# Marker 损坏或不成对，停止而不修改 Hosts。
+if ! awk -v b="$BEGIN_MARKER" -v e="$END_MARKER" \
+    -v lb="$LEGACY_BEGIN_MARKER" -v le="$LEGACY_END_MARKER" \
+    -v block="$BLOCK_FILE" '
     function print_block( line) {
         while ((getline line < block) > 0) print line
         close(block)
@@ -176,10 +290,24 @@ if ! awk -v b="$BEGIN_MARKER" -v e="$END_MARKER" -v block="$BLOCK_FILE" '
         seen_end=1
         next
     }
+    $0 == lb {
+        if (legacy_inside || legacy_seen_begin) exit 14
+        legacy_inside=1
+        legacy_seen_begin=1
+        next
+    }
+    $0 == le {
+        if (!legacy_inside || legacy_seen_end) exit 15
+        legacy_inside=0
+        legacy_seen_end=1
+        next
+    }
+    legacy_inside { next }
     inside { next }
     { print }
     END {
         if (inside) exit 12
+        if (legacy_inside) exit 16
         if (!seen_begin) {
             print b
             print_block()
@@ -193,6 +321,13 @@ fi
 printf 'GitHub source: %s\n' "$RAW_BASE_URL/hosts-map.tsv"
 printf 'Accepted mappings: %s\n' "$(wc -l < "$BLOCK_FILE" | tr -d ' ')"
 printf 'Local Hosts Marker: %s\n' "$(grep -F -c "$BEGIN_MARKER" "$HOSTS_FILE" || true)"
+printf 'Legacy PT Marker: %s\n' "$(grep -F -c "$LEGACY_BEGIN_MARKER" "$HOSTS_FILE" || true)"
+if [ "$MODE" != status ] && [ "$VERIFY_BEFORE_APPLY" = true ]; then
+    printf 'HTTPS verification: passed=%s rejected=%s reject_http_codes=%s\n' "$verified_count" "$rejected_count" "$REJECT_HTTP_CODES"
+    if [ "$MODE" = dry-run ] || [ "$rejected_count" -gt 0 ]; then
+        cat "$VERIFY_LOG"
+    fi
+fi
 
 if [ "$MODE" = status ]; then
     if cmp -s "$HOSTS_FILE" "$EXPECTED_FILE"; then
@@ -220,17 +355,17 @@ if cmp -s "$HOSTS_FILE" "$EXPECTED_FILE"; then
     exit 0
 fi
 
-if [ "$(id -u)" -ne 0 ]; then
+if [ "$RUN_AS_ROOT" -eq 1 ]; then
     sudo -v || die 'sudo authorization failed'
 fi
 
 BACKUP_PATH="$HOSTS_FILE.cloudflare-yx-sync.$(date '+%Y%m%d-%H%M%S')"
-as_root cp -p "$HOSTS_FILE" "$BACKUP_PATH" || die "cannot back up $HOSTS_FILE to $BACKUP_PATH"
+run_privileged cp -p "$HOSTS_FILE" "$BACKUP_PATH" || die "cannot back up $HOSTS_FILE to $BACKUP_PATH"
 
 HOST_MODE=$(stat -f '%Lp' "$HOSTS_FILE") || die 'cannot read Hosts mode'
 HOST_OWNER=$(stat -f '%Su' "$HOSTS_FILE") || die 'cannot read Hosts owner'
 HOST_GROUP=$(stat -f '%Sg' "$HOSTS_FILE") || die 'cannot read Hosts group'
-as_root install -m "$HOST_MODE" -o "$HOST_OWNER" -g "$HOST_GROUP" "$EXPECTED_FILE" "$HOSTS_FILE" || {
+run_privileged install -m "$HOST_MODE" -o "$HOST_OWNER" -g "$HOST_GROUP" "$EXPECTED_FILE" "$HOSTS_FILE" || {
     printf 'ERROR: Hosts update failed; backup remains at %s\n' "$BACKUP_PATH" >&2
     exit 1
 }

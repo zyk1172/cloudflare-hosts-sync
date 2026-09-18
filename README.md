@@ -1,6 +1,6 @@
 # Cloudflare Hosts Sync
 
-这个私有仓库是 QNAP Cloudflare Hosts Manager 与 macOS 之间的同步边界。
+这个公开 raw 仓库是 QNAP Cloudflare Hosts Manager 与 macOS 之间的同步边界。
 
 ## 设计
 
@@ -15,16 +15,18 @@ QNAP Cloudflare Hosts Manager
 macOS mac-sync-hosts.sh
         ├─ 直接拉取 hosts-map.tsv（不 clone 仓库）
         ├─ 校验精确 FQDN、IP 和 VERIFIED/RETAINED 状态
+        ├─ 清理已知旧 PT-CLOUDFLARE-MANAGED Marker
+        ├─ 逐域名 HTTPS 检测，默认拒绝 HTTP 000/403
         └─ 只更新本机 /etc/hosts 的 CF-YX-MAC-SYNC Marker
 ```
 
 NAS 不会上传 yx-tools 的完整候选池、配置文件、日志、Tracker 凭据或 Token。仓库只保存逐域名的已验证映射和非敏感状态摘要。
 
-macOS 端不会重新测速，也不会扫描 DNS；它只信任仓库中的 `VERIFIED` 映射。仓库应保持 Private。
+macOS 端不会重新测速，也不会扫描 DNS；它会对仓库映射逐域名执行一次真实 GET HTTPS 检测。默认拒绝 HTTP 000 和 403，避免把已知无法打开或无法做种的 IP 写入本机 Hosts。
 
 ## macOS 使用
 
-脚本不需要建立本地 Git 项目，也不需要保存仓库工作副本。当前仓库保持 Private 时，Mac 使用 GitHub CLI 的 raw 内容接口读取文件，因此只需登录一次：
+脚本不需要建立本地 Git 项目，也不需要保存仓库工作副本。当前仓库公开，Mac 直接使用 raw 内容读取文件：
 
 ```sh
 gh auth login
@@ -53,6 +55,16 @@ chmod +x "$HOME/bin/cloudflare-hosts-sync"
 
 本机其他 Hosts 内容、OpenSurge 配置和代理规则不会被修改。
 
+首次升级时，脚本还会只删除以下已知旧入口区域（必须成对存在）：
+
+```text
+# BEGIN PT-CLOUDFLARE-MANAGED
+...
+# END PT-CLOUDFLARE-MANAGED
+```
+
+如果旧 Marker 不完整，脚本会停止，不会修改 Hosts。
+
 日后手工同步：
 
 ```sh
@@ -65,13 +77,25 @@ chmod +x "$HOME/bin/cloudflare-hosts-sync"
 "$HOME/bin/cloudflare-hosts-sync" --status
 ```
 
-默认 `CLOUDFLARE_HOSTS_FETCH_MODE=auto`：先直接尝试 `raw.githubusercontent.com`；如果仓库是 Private 导致匿名 raw 不可读，再回退到 GitHub CLI 的认证 raw 内容接口。整个过程都不建立本地项目。如果把仓库改为公开，也可以显式使用：
+默认 `CLOUDFLARE_HOSTS_FETCH_MODE=auto`：先直接尝试 `raw.githubusercontent.com`；公开仓库可以显式使用：
 
 ```sh
 CLOUDFLARE_HOSTS_FETCH_MODE=raw "$HOME/bin/cloudflare-hosts-sync"
 ```
 
-当前仓库是 Private，所以匿名 raw 方式不能读取它；不要把包含 PT 域名/IP 的仓库改公开，除非确认可以接受公开暴露。
+当前仓库已经公开，Mac 定时执行时使用匿名 raw，不需要 GitHub CLI 凭据。
+
+验证参数可以通过环境变量调整：
+
+```sh
+CLOUDFLARE_HOSTS_VERIFY_BEFORE_APPLY=true
+CLOUDFLARE_HOSTS_VERIFY_RETRIES=1
+CLOUDFLARE_HOSTS_VERIFY_CONNECT_TIMEOUT=4
+CLOUDFLARE_HOSTS_VERIFY_MAX_TIME=8
+CLOUDFLARE_HOSTS_REJECT_HTTP_CODES=000,403
+```
+
+验证失败的单个域名不会进入新的 Mac Marker；其它通过验证的域名仍会独立更新。
 
 ## 可选的 macOS 定时执行
 
@@ -91,4 +115,4 @@ CLOUDFLARE_HOSTS_FETCH_MODE=raw "$HOME/bin/cloudflare-hosts-sync"
 domain  ip  group  delay_ms  speed_mb_s  loss_percent  colo  verified_at  http_code  status
 ```
 
-只有 `status=VERIFIED` 或 `status=RETAINED` 的精确 FQDN 才会被 macOS 脚本应用。`RETAINED` 表示 NAS 本轮没有可靠的新候选，继续沿用上一次已应用映射。通配符、协议、路径、端口、空格和重复域名都会被拒绝。
+只有 `status=VERIFIED` 或 `status=RETAINED` 且通过 Mac 本地 HTTPS 检测的精确 FQDN 才会被应用。`RETAINED` 表示 NAS 本轮没有可靠的新候选，继续沿用上一次已应用映射。通配符、协议、路径、端口、空格和重复域名都会被拒绝。
