@@ -18,6 +18,11 @@ macOS mac-sync-hosts.sh
         ├─ 清理已知旧 PT-CLOUDFLARE-MANAGED Marker
         ├─ 逐域名 HTTPS 检测，默认拒绝 HTTP 000/403
         └─ 只更新本机 /etc/hosts 的 CF-YX-MAC-SYNC Marker
+                ↓
+Windows cloudflare-hosts-sync.ps1
+        ├─ 直接拉取同一份 hosts-map.tsv（不 clone 仓库）
+        ├─ 使用 Windows 内置 curl.exe 逐域名执行 HTTPS 检测
+        └─ 只更新 Windows Hosts 的 CF-YX-WIN-SYNC Marker
 ```
 
 NAS 不会上传 yx-tools 的完整候选池、配置文件、日志、Tracker 凭据或 Token。仓库只保存逐域名的已验证映射和非敏感状态摘要。
@@ -96,6 +101,76 @@ CLOUDFLARE_HOSTS_REJECT_HTTP_CODES=000,403
 ```
 
 验证失败的单个域名不会进入新的 Mac Marker；其它通过验证的域名仍会独立更新。
+
+## Windows 使用
+
+Windows 版本不需要建立 Git 项目，也不需要 GitHub 凭据。它与 Mac 版本读取同一份公开 raw 数据，但使用 Windows 的 Hosts 路径：
+
+```text
+C:\Windows\System32\drivers\etc\hosts
+```
+
+请把脚本保存到一个不会被普通用户随意修改的位置，例如 `C:\ProgramData\CloudflareHostsSync\cloudflare-hosts-sync.ps1`。在 PowerShell 中执行：
+
+```powershell
+$scriptPath = 'C:\ProgramData\CloudflareHostsSync\cloudflare-hosts-sync.ps1'
+New-Item -ItemType Directory -Path (Split-Path -Parent $scriptPath) -Force | Out-Null
+Invoke-WebRequest `
+  -Uri 'https://raw.githubusercontent.com/zyk1172/cloudflare-hosts-sync/main/cloudflare-hosts-sync.ps1' `
+  -OutFile $scriptPath
+
+# 先检查，不写 Windows Hosts
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -DryRun
+
+# 只查看当前映射与 Hosts 是否漂移
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Status
+```
+
+真正应用需要“以管理员身份”打开 PowerShell：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath
+```
+
+脚本默认使用 Windows 10/11 自带的 `curl.exe`，每个域名单独执行真实 GET HTTPS 验证；证书验证保持开启，默认拒绝 HTTP `000` 和 `403`。它只维护：
+
+```text
+# CF-YX-WIN-SYNC-BEGIN
+...
+# CF-YX-WIN-SYNC-END
+```
+
+其它 Windows Hosts 内容、Mac Marker、OpenSurge 配置和代理规则不会被修改。已知的旧 `PT-CLOUDFLARE-MANAGED` Marker 会在成对完整时迁移清理；旧 Marker 不完整时脚本停止，不修改 Hosts。
+
+如果需要每天自动同步，可以使用“任务计划程序”创建一个以 `SYSTEM`、最高权限运行的每日任务。下面的 PowerShell 命令需要在管理员 PowerShell 中执行一次：
+
+```powershell
+$scriptPath = 'C:\ProgramData\CloudflareHostsSync\cloudflare-hosts-sync.ps1'
+$action = New-ScheduledTaskAction `
+  -Execute "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" `
+  -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`""
+$trigger = New-ScheduledTaskTrigger -Daily -At 5:00AM
+$principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
+Register-ScheduledTask `
+  -TaskName 'Cloudflare Hosts Sync' `
+  -Action $action `
+  -Trigger $trigger `
+  -Principal $principal `
+  -Description 'Pull and locally verify Cloudflare Hosts mappings.'
+```
+
+任务每次运行都会重新读取仓库中的 `hosts-map.tsv`，不会重新测速，也不会访问 NAS；本地验证全部失败时会保留原 Windows Hosts。并发执行会通过临时目录下的文件锁互斥。
+
+Windows 版本支持与 Mac 版本相同的环境变量，例如：
+
+```powershell
+$env:CLOUDFLARE_HOSTS_VERIFY_RETRIES = '1'
+$env:CLOUDFLARE_HOSTS_VERIFY_CONNECT_TIMEOUT = '4'
+$env:CLOUDFLARE_HOSTS_VERIFY_MAX_TIME = '8'
+$env:CLOUDFLARE_HOSTS_REJECT_HTTP_CODES = '000,403'
+```
+
+如果需要指定其它 Hosts 文件进行测试，可使用 `-HostsFile 'C:\path\to\hosts'`；生产应用不要把 `-NoVerify` 当作正常更新参数。
 
 ## 可选的 macOS 定时执行
 
