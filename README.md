@@ -81,4 +81,4 @@ chmod +x mac-sync-hosts.sh
 domain  ip  group  delay_ms  speed_mb_s  loss_percent  colo  verified_at  http_code  status
 ```
 
-只有 `status=VERIFIED` 的精确 FQDN 才会被 macOS 脚本应用。通配符、协议、路径、端口、空格和重复域名都会被拒绝。
+只有 `status=VERIFIED` 或 `status=RETAINED` 的精确 FQDN 才会被 macOS 脚本应用。`RETAINED` 表示 NAS 本轮没有可靠的新候选，继续沿用上一次已应用映射。通配符、协议、路径、端口、空格和重复域名都会被拒绝。

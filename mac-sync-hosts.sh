@@ -104,8 +104,9 @@ BLOCK_FILE="$TMP_DIR/hosts.block"
 RAW_BLOCK_FILE="$TMP_DIR/hosts.block.raw"
 EXPECTED_FILE="$TMP_DIR/hosts.expected"
 
-# 只接受经过 Hosts Manager 验证的记录。域名必须是精确 FQDN，禁止协议、路径、
-# 端口、通配符和空格；同一域名只取第一条，避免生成冲突 Hosts。
+# 只接受 Hosts Manager 的 VERIFIED 或 RETAINED 记录。RETAINED 表示本轮没有
+# 可靠的新候选，所以沿用上一次已应用映射。域名必须是精确 FQDN，禁止协议、
+# 路径、端口、通配符和空格；同一域名只取第一条，避免生成冲突 Hosts。
 if ! awk -F '\t' '
     function valid_domain(d) {
         return d ~ /^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+$/
@@ -120,7 +121,7 @@ if ! awk -F '\t' '
     }
     /^[[:space:]]*#/ || NF == 0 { next }
     {
-        if (NF < 10 || !valid_domain($1) || !valid_ip($2) || ($3 != "latency" && $3 != "bandwidth") || $10 != "VERIFIED") {
+        if (NF < 10 || !valid_domain($1) || !valid_ip($2) || ($3 != "latency" && $3 != "bandwidth") || ($10 != "VERIFIED" && $10 != "RETAINED")) {
             invalid=1
             next
         }
@@ -128,7 +129,7 @@ if ! awk -F '\t' '
     }
     END { if (invalid) exit 2 }
 ' "$MAP_FILE" > "$RAW_BLOCK_FILE"; then
-    die "hosts-map.tsv contains an invalid or unverified record"
+    die "hosts-map.tsv contains an invalid or unsupported record"
 fi
 
 LC_ALL=C sort -k2,2 "$RAW_BLOCK_FILE" > "$BLOCK_FILE" || die 'cannot sort verified mappings'
