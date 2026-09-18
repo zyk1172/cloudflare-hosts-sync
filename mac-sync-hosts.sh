@@ -172,7 +172,7 @@ if ! awk -v b="$BEGIN_MARKER" -v e="$END_MARKER" -v block="$BLOCK_FILE" '
 fi
 
 printf 'GitHub repository: %s (%s)\n' "$REPOSITORY" "$BRANCH"
-printf 'Verified mappings: %s\n' "$(wc -l < "$BLOCK_FILE" | tr -d ' ')"
+printf 'Accepted mappings: %s\n' "$(wc -l < "$BLOCK_FILE" | tr -d ' ')"
 printf 'Local Hosts Marker: %s\n' "$(grep -F -c "$BEGIN_MARKER" "$HOSTS_FILE" || true)"
 
 if [ "$MODE" = status ]; then
