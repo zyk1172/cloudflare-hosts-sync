@@ -13,8 +13,8 @@ QNAP Cloudflare Hosts Manager
         └─ 发布已验证的 hosts-map.tsv 到本仓库
                 ↓
 macOS mac-sync-hosts.sh
-        ├─ git fetch --ff-only
-        ├─ 校验精确 FQDN、IP 和 VERIFIED 状态
+        ├─ 直接拉取 hosts-map.tsv（不 clone 仓库）
+        ├─ 校验精确 FQDN、IP 和 VERIFIED/RETAINED 状态
         └─ 只更新本机 /etc/hosts 的 CF-YX-MAC-SYNC Marker
 ```
 
@@ -24,15 +24,17 @@ macOS 端不会重新测速，也不会扫描 DNS；它只信任仓库中的 `VE
 
 ## macOS 使用
 
-首次准备：
+脚本不需要建立本地 Git 项目，也不需要保存仓库工作副本。当前仓库保持 Private 时，Mac 使用 GitHub CLI 的 raw 内容接口读取文件，因此只需登录一次：
 
 ```sh
 gh auth login
-gh repo clone zyk1172/cloudflare-hosts-sync
-cd cloudflare-hosts-sync
-chmod +x mac-sync-hosts.sh
-./mac-sync-hosts.sh --dry-run
-./mac-sync-hosts.sh
+mkdir -p "$HOME/bin"
+gh api -H 'Accept: application/vnd.github.raw' \
+  '/repos/zyk1172/cloudflare-hosts-sync/contents/mac-sync-hosts.sh?ref=main' \
+  > "$HOME/bin/cloudflare-hosts-sync"
+chmod +x "$HOME/bin/cloudflare-hosts-sync"
+"$HOME/bin/cloudflare-hosts-sync" --dry-run
+"$HOME/bin/cloudflare-hosts-sync"
 ```
 
 脚本需要 sudo 才能更新 `/etc/hosts`。它会在真正修改前创建：
@@ -54,14 +56,22 @@ chmod +x mac-sync-hosts.sh
 日后手工同步：
 
 ```sh
-./mac-sync-hosts.sh
+"$HOME/bin/cloudflare-hosts-sync"
 ```
 
 只查看状态：
 
 ```sh
-./mac-sync-hosts.sh --status
+"$HOME/bin/cloudflare-hosts-sync" --status
 ```
+
+默认 `CLOUDFLARE_HOSTS_FETCH_MODE=auto`：有 `gh` 时使用认证的 GitHub raw 内容接口，不建立项目；没有 `gh` 时才尝试匿名 `raw.githubusercontent.com`。如果把仓库改为公开，也可以显式使用：
+
+```sh
+CLOUDFLARE_HOSTS_FETCH_MODE=raw "$HOME/bin/cloudflare-hosts-sync"
+```
+
+当前仓库是 Private，所以匿名 raw 方式不能读取它；不要把包含 PT 域名/IP 的仓库改公开，除非确认可以接受公开暴露。
 
 ## 可选的 macOS 定时执行
 

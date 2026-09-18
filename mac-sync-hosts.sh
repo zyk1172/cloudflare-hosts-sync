@@ -12,7 +12,8 @@ umask 022
 
 REPOSITORY=${CLOUDFLARE_HOSTS_REPO:-zyk1172/cloudflare-hosts-sync}
 BRANCH=${CLOUDFLARE_HOSTS_BRANCH:-main}
-SYNC_DIR=${CLOUDFLARE_HOSTS_DIR:-"$HOME/Library/Application Support/cloudflare-hosts-sync"}
+FETCH_MODE=${CLOUDFLARE_HOSTS_FETCH_MODE:-auto}
+RAW_BASE_URL=${CLOUDFLARE_HOSTS_RAW_BASE_URL:-https://raw.githubusercontent.com/$REPOSITORY/$BRANCH}
 HOSTS_FILE=${CLOUDFLARE_HOSTS_FILE:-/etc/hosts}
 BEGIN_MARKER=${CLOUDFLARE_HOSTS_BEGIN_MARKER:-'# CF-YX-MAC-SYNC-BEGIN'}
 END_MARKER=${CLOUDFLARE_HOSTS_END_MARKER:-'# CF-YX-MAC-SYNC-END'}
@@ -34,7 +35,8 @@ Cloudflare Hosts Sync for macOS
 可选环境变量:
   CLOUDFLARE_HOSTS_REPO
   CLOUDFLARE_HOSTS_BRANCH
-  CLOUDFLARE_HOSTS_DIR
+  CLOUDFLARE_HOSTS_FETCH_MODE   auto、api 或 raw，默认 auto
+  CLOUDFLARE_HOSTS_RAW_BASE_URL 公开仓库时可覆盖 raw 基地址
   CLOUDFLARE_HOSTS_FILE
 EOF
         exit 0
@@ -65,7 +67,6 @@ as_root() {
 require_command awk
 require_command cmp
 require_command date
-require_command git
 require_command mktemp
 require_command sort
 require_command stat
@@ -74,25 +75,10 @@ if [ ! -r "$HOSTS_FILE" ]; then
     die "Hosts file is not readable: $HOSTS_FILE"
 fi
 
-mkdir -p "$(dirname "$SYNC_DIR")"
-
-if [ ! -d "$SYNC_DIR/.git" ]; then
-    if [ -e "$SYNC_DIR" ]; then
-        die "sync directory exists but is not a Git checkout: $SYNC_DIR"
-    fi
-    if command -v gh >/dev/null 2>&1; then
-        gh repo clone "$REPOSITORY" "$SYNC_DIR" >/dev/null || die "cannot clone private repository: $REPOSITORY"
-    else
-        die "gh is required for the first clone; install GitHub CLI and run gh auth login"
-    fi
-else
-    git -C "$SYNC_DIR" fetch --quiet origin "$BRANCH" || die "cannot fetch GitHub repository"
-    git -C "$SYNC_DIR" checkout -q "$BRANCH" || die "cannot checkout branch: $BRANCH"
-    git -C "$SYNC_DIR" merge --ff-only "origin/$BRANCH" >/dev/null || die "local sync checkout is not a fast-forward; inspect: $SYNC_DIR"
-fi
-
-MAP_FILE="$SYNC_DIR/hosts-map.tsv"
-[ -r "$MAP_FILE" ] || die "repository does not contain hosts-map.tsv"
+case "$FETCH_MODE" in
+    auto|api|raw) ;;
+    *) die "CLOUDFLARE_HOSTS_FETCH_MODE must be auto, api or raw" ;;
+esac
 
 TMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/cloudflare-hosts-sync.XXXXXX") || die 'cannot create temporary directory'
 cleanup() {
@@ -103,6 +89,36 @@ trap cleanup EXIT HUP INT TERM
 BLOCK_FILE="$TMP_DIR/hosts.block"
 RAW_BLOCK_FILE="$TMP_DIR/hosts.block.raw"
 EXPECTED_FILE="$TMP_DIR/hosts.expected"
+MAP_FILE="$TMP_DIR/hosts-map.tsv"
+STATUS_FILE="$TMP_DIR/status.json"
+
+fetch_repo_file() {
+    fetch_path=$1
+    fetch_output=$2
+    case "$FETCH_MODE" in
+        raw)
+            require_command curl
+            curl -fsSL --retry 2 "$RAW_BASE_URL/$fetch_path" > "$fetch_output"
+            ;;
+        api)
+            require_command gh
+            gh api -H 'Accept: application/vnd.github.raw' "/repos/$REPOSITORY/contents/$fetch_path?ref=$BRANCH" > "$fetch_output"
+            ;;
+        auto)
+            if command -v gh >/dev/null 2>&1; then
+                gh api -H 'Accept: application/vnd.github.raw' "/repos/$REPOSITORY/contents/$fetch_path?ref=$BRANCH" > "$fetch_output"
+            else
+                require_command curl
+                curl -fsSL --retry 2 "$RAW_BASE_URL/$fetch_path" > "$fetch_output"
+            fi
+            ;;
+    esac
+}
+
+if ! fetch_repo_file hosts-map.tsv "$MAP_FILE"; then
+    die "cannot fetch hosts-map.tsv; private repositories require gh auth login, while anonymous raw mode requires a public repository"
+fi
+fetch_repo_file status.json "$STATUS_FILE" 2>/dev/null || true
 
 # 只接受 Hosts Manager 的 VERIFIED 或 RETAINED 记录。RETAINED 表示本轮没有
 # 可靠的新候选，所以沿用上一次已应用映射。域名必须是精确 FQDN，禁止协议、
@@ -171,7 +187,7 @@ if ! awk -v b="$BEGIN_MARKER" -v e="$END_MARKER" -v block="$BLOCK_FILE" '
     die "existing /etc/hosts contains a malformed or duplicate Mac sync Marker"
 fi
 
-printf 'GitHub repository: %s (%s)\n' "$REPOSITORY" "$BRANCH"
+printf 'GitHub source: %s\n' "$RAW_BASE_URL/hosts-map.tsv"
 printf 'Accepted mappings: %s\n' "$(wc -l < "$BLOCK_FILE" | tr -d ' ')"
 printf 'Local Hosts Marker: %s\n' "$(grep -F -c "$BEGIN_MARKER" "$HOSTS_FILE" || true)"
 
@@ -181,7 +197,7 @@ if [ "$MODE" = status ]; then
     else
         printf 'Hosts status: drifted\n'
     fi
-    cat "$SYNC_DIR/status.json" 2>/dev/null || true
+    cat "$STATUS_FILE" 2>/dev/null || true
     exit 0
 fi
 
