@@ -1,4 +1,4 @@
-# domain\tip\tgroup\tdelay_ms\tspeed_mb_s\tloss_percent\tcolo\tverified_at\thttp_code\tstatus
+# domain	ip	group	delay_ms	speed_mb_s	loss_percent	colo	verified_at	http_code	status
 m-team.cc	162.159.4.181	latency	90.19	44.06	0	SIN	2026-09-19T04:03:29+0800	403	RETAINED
 www.m-team.cc	162.159.4.181	latency	90.19	44.06	0	SIN	2026-09-19T04:03:29+0800	403	RETAINED
 kp.m-team.cc	162.159.4.181	latency	90.19	44.06	0	SIN	2026-09-19T04:03:29+0800	403	RETAINED
