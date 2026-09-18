@@ -105,6 +105,9 @@ fetch_repo_file() {
             gh api -H 'Accept: application/vnd.github.raw' "/repos/$REPOSITORY/contents/$fetch_path?ref=$BRANCH" > "$fetch_output"
             ;;
         auto)
+            if command -v curl >/dev/null 2>&1 && curl -fsSL --retry 2 "$RAW_BASE_URL/$fetch_path" > "$fetch_output" 2>/dev/null; then
+                return 0
+            fi
             if command -v gh >/dev/null 2>&1; then
                 gh api -H 'Accept: application/vnd.github.raw' "/repos/$REPOSITORY/contents/$fetch_path?ref=$BRANCH" > "$fetch_output"
             else

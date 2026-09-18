@@ -65,7 +65,7 @@ chmod +x "$HOME/bin/cloudflare-hosts-sync"
 "$HOME/bin/cloudflare-hosts-sync" --status
 ```
 
-默认 `CLOUDFLARE_HOSTS_FETCH_MODE=auto`：有 `gh` 时使用认证的 GitHub raw 内容接口，不建立项目；没有 `gh` 时才尝试匿名 `raw.githubusercontent.com`。如果把仓库改为公开，也可以显式使用：
+默认 `CLOUDFLARE_HOSTS_FETCH_MODE=auto`：先直接尝试 `raw.githubusercontent.com`；如果仓库是 Private 导致匿名 raw 不可读，再回退到 GitHub CLI 的认证 raw 内容接口。整个过程都不建立本地项目。如果把仓库改为公开，也可以显式使用：
 
 ```sh
 CLOUDFLARE_HOSTS_FETCH_MODE=raw "$HOME/bin/cloudflare-hosts-sync"
