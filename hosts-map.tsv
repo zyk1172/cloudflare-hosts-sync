@@ -1,6 +1,7 @@
 # domain	ip	group	delay_ms	speed_mb_s	loss_percent	colo	verified_at	http_code	status
-tracker.m-team.cc	104.18.32.176	latency	92.17	4.77	0	SIN	2026-09-20T20:36:13+0800	200	VERIFIED
-tracker.m-team.io	104.18.32.176	latency	92.17	4.77	0	SIN	2026-09-20T20:36:14+0800	200	VERIFIED
-tracker.hdtime.org	104.18.32.176	latency	92.17	4.77	0	SIN	2026-09-20T20:36:14+0800	200	VERIFIED
-tracker.ptcafe.club	104.18.41.90	latency	92.55	4.78	0	SIN	2026-09-20T20:36:14+0800	200	VERIFIED
-tracker.xingyungept.org	104.18.45.100	latency	94.39	4.85	0	SIN	2026-09-20T20:36:14+0800	200	VERIFIED
+tracker.m-team.cc	104.18.32.176	latency	92.17	4.77	0	SIN	2026-09-20T20:38:45+0800	200	VERIFIED
+tracker.m-team.io	104.18.32.176	latency	92.17	4.77	0	SIN	2026-09-20T20:38:45+0800	200	VERIFIED
+tracker.hdtime.org	104.18.32.176	latency	92.17	4.77	0	SIN	2026-09-20T20:38:45+0800	200	VERIFIED
+tracker.ptcafe.club	104.18.41.90	latency	92.55	4.78	0	SIN	2026-09-20T20:38:45+0800	200	VERIFIED
+tracker.xingyungept.org	104.18.45.100	latency	94.39	4.85	0	SIN	2026-09-20T20:38:45+0800	200	VERIFIED
+www.pttime.org	104.18.41.90	latency	92.55	4.78	0	SIN	2026-09-20T20:38:45+0800	200	VERIFIED
