@@ -1,3 +1,4 @@
 # domain	ip	group	delay_ms	speed_mb_s	loss_percent	colo	verified_at	http_code	status
-tracker.ptcafe.club	172.64.155.86	latency	90.93	37.96	0	SIN	2026-09-20T04:06:57+0800	200	RETAINED
+tracker.hdtime.org	172.64.229.146	latency	104.07	31.33	0	NRT	2026-09-20T19:24:06+0800	200	VERIFIED
+tracker.ptcafe.club	172.64.52.38	latency	113.25	34.95	0	NRT	2026-09-20T19:24:06+0800	200	VERIFIED
 tracker.xingyungept.org	104.18.42.212	latency	89.17	40.92	0	SIN	2026-09-19T22:55:23+0800	200	RETAINED
