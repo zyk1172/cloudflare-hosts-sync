@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-20T04:07:23+0800",
+  "generated_at": "2026-09-20T19:01:59+0800",
   "source": "QNAP Cloudflare Hosts Manager",
   "map_file": "hosts-map.tsv",
-  "domain_count": 18,
-  "latency_count": 16,
-  "bandwidth_count": 2
+  "domain_count": 2,
+  "latency_count": 2,
+  "bandwidth_count": 0
 }
