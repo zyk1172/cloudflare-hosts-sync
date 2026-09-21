@@ -27,3 +27,31 @@ jobs:
             $errors | ForEach-Object { Write-Error $_.Message }
             exit 1
           }
+      - name: Smoke test schema-3 normal mapping
+        shell: bash
+        run: |
+          set -eu
+          tmp="$(mktemp -d)"
+          trap 'kill "$server_pid" 2>/dev/null || true; rm -rf "$tmp"' EXIT
+          printf '# domain\tip\tgroup\tdelay_ms\tspeed_mb_s\tloss_percent\tcolo\tverified_at\thttp_code\tstatus\nplain.example.com\t104.16.0.1\tnormal\t10\t5\t0\tHKG\t2026-09-22T01:00:00+08:00\t-\tSELECTED\n' > "$tmp/hosts-map.tsv"
+          printf '{"schema":3,"domain_count":1,"normal_count":1}\n' > "$tmp/status.json"
+          printf '127.0.0.1 localhost\n' > "$tmp/hosts"
+          mkdir -p "$tmp/temp"
+          python3 -m http.server 18080 --bind 127.0.0.1 --directory "$tmp" >"$tmp/http.log" 2>&1 &
+          server_pid=$!
+          sleep 1
+
+          CLOUDFLARE_HOSTS_FETCH_MODE=raw \
+          CLOUDFLARE_HOSTS_RAW_BASE_URL=http://127.0.0.1:18080 \
+          CLOUDFLARE_HOSTS_FILE="$tmp/hosts" \
+          sh ./mac-sync-hosts.sh --dry-run > "$tmp/mac.out"
+          grep -F 'normal_skipped=1' "$tmp/mac.out"
+          grep -F '104.16.0.1' "$tmp/mac.out"
+          grep -F 'plain.example.com' "$tmp/mac.out"
+
+          TEMP="$tmp/temp" \
+          CLOUDFLARE_HOSTS_FETCH_MODE=raw \
+          CLOUDFLARE_HOSTS_RAW_BASE_URL=http://127.0.0.1:18080 \
+          pwsh -NoProfile -File ./cloudflare-hosts-sync.ps1 -HostsFile "$tmp/hosts" -DryRun > "$tmp/windows.out"
+          grep -F 'normal_skipped=1' "$tmp/windows.out"
+          grep -F '104.16.0.1' "$tmp/windows.out"

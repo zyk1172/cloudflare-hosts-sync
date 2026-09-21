@@ -174,8 +174,8 @@ if [ -s "$STATUS_FILE" ] &&
     REMOTE_EXPLICIT_EMPTY=1
 fi
 
-# 只接受 Hosts Manager 的 VERIFIED 或 RETAINED 记录。RETAINED 表示本轮没有
-# 可靠的新候选，所以沿用上一次已应用映射；但仍必须通过本机实际 HTTPS 检测。
+# latency / bandwidth 接受 VERIFIED 或 RETAINED；normal 接受 SELECTED。
+# normal 表示由 CFST 直接按延迟选中，按策略定义不做本机 HTTPS 二次验证。
 # 域名必须是精确 FQDN，禁止协议、路径、端口、通配符和空格；同一域名只取第一条。
 if ! awk -F '\t' '
     function valid_domain(d) {
@@ -191,7 +191,10 @@ if ! awk -F '\t' '
     }
     /^[[:space:]]*#/ || NF == 0 { next }
     {
-        if (NF < 10 || !valid_domain($1) || !valid_ip($2) || ($3 != "latency" && $3 != "bandwidth") || ($10 != "VERIFIED" && $10 != "RETAINED")) {
+        if (NF < 10 || !valid_domain($1) || !valid_ip($2) ||
+            ($3 != "latency" && $3 != "bandwidth" && $3 != "normal") ||
+            (($3 == "normal" && $10 != "SELECTED") ||
+             ($3 != "normal" && $10 != "VERIFIED" && $10 != "RETAINED"))) {
             invalid=1
             next
         }
@@ -216,13 +219,22 @@ http_code_is_rejected() {
 : > "$VERIFY_LOG"
 verified_count=0
 rejected_count=0
+normal_count=0
 
 if [ "$MODE" = status ] || [ "$VERIFY_BEFORE_APPLY" = false ]; then
     awk -F '\t' '{ print $2 "\t" $1 }' "$SORTED_RECORDS_FILE" > "$BLOCK_FILE"
 else
-    require_command curl
+    if awk -F '\t' '$3 != "normal" { found=1 } END { exit(found ? 0 : 1) }' "$SORTED_RECORDS_FILE"; then
+        require_command curl
+    fi
     while IFS="$(printf '\t')" read -r domain ip group delay speed loss colo verified_at source_http_code status; do
         [ -n "$domain" ] || continue
+        if [ "$group" = normal ]; then
+            printf 'SKIP %s %s NORMAL selected_by_cfst\n' "$domain" "$ip" >> "$VERIFY_LOG"
+            printf '%s\t%s\n' "$ip" "$domain" >> "$BLOCK_FILE"
+            normal_count=$((normal_count + 1))
+            continue
+        fi
         attempt=1
         last_http_code=000
         last_reason=connection_or_tls_failure
@@ -335,7 +347,7 @@ fi
 printf 'Local Hosts Marker: %s\n' "$(grep -F -c "$BEGIN_MARKER" "$HOSTS_FILE" || true)"
 printf 'Legacy PT Marker: %s\n' "$(grep -F -c "$LEGACY_BEGIN_MARKER" "$HOSTS_FILE" || true)"
 if [ "$MODE" != status ] && [ "$VERIFY_BEFORE_APPLY" = true ]; then
-    printf 'HTTPS verification: passed=%s rejected=%s reject_http_codes=%s\n' "$verified_count" "$rejected_count" "$REJECT_HTTP_CODES"
+    printf 'HTTPS verification: passed=%s rejected=%s normal_skipped=%s reject_http_codes=%s\n' "$verified_count" "$rejected_count" "$normal_count" "$REJECT_HTTP_CODES"
     if [ "$MODE" = dry-run ] || [ "$rejected_count" -gt 0 ]; then
         cat "$VERIFY_LOG"
     fi
