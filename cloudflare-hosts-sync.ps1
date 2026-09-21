@@ -223,8 +223,19 @@ try {
     $statusText = $null
     try { $statusText = Get-RemoteText -RelativePath 'status.json' } catch { $statusText = $null }
     $records = Get-MapRecords -MapText $mapText
-    if ($records.Count -eq 0) {
-        throw 'hosts-map.tsv has no valid mappings.'
+    $explicitEmpty = $false
+    if ($statusText) {
+        try {
+            $statusDoc = $statusText | ConvertFrom-Json
+            if ([int]$statusDoc.schema -ge 2 -and [int]$statusDoc.domain_count -eq 0) {
+                $explicitEmpty = $true
+            }
+        } catch {
+            $explicitEmpty = $false
+        }
+    }
+    if ($records.Count -eq 0 -and -not $explicitEmpty) {
+        throw 'hosts-map.tsv has no valid mappings and status.json does not declare an explicit empty schema-2 map.'
     }
 
     $curl = Get-Command curl.exe -ErrorAction SilentlyContinue
@@ -277,7 +288,7 @@ try {
     }
 
     $blockLines = @($blockLines | Sort-Object { ($_ -split "`t", 2)[1] })
-    if ($Mode -ne 'status' -and $blockLines.Count -eq 0) {
+    if ($Mode -ne 'status' -and $blockLines.Count -eq 0 -and -not $explicitEmpty) {
         throw 'No mapping passed local HTTPS verification; existing Hosts was preserved.'
     }
 
@@ -342,6 +353,9 @@ try {
 
     Write-Output "GitHub source: $RawBaseUrl/hosts-map.tsv"
     Write-Output "Accepted mappings: $($blockLines.Count)"
+    if ($explicitEmpty) {
+        Write-Output 'Remote map state: explicit empty mapping set (schema >= 2)'
+    }
     Write-Output "Local Windows Marker: $(@($currentLines | Where-Object { $_ -ceq $BeginMarker }).Count)"
     Write-Output "Legacy PT Marker: $(@($currentLines | Where-Object { $_ -ceq $LegacyBeginMarker }).Count)"
     if ($Mode -ne 'status' -and $VerifyBeforeApply) {

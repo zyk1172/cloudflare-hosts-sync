@@ -191,3 +191,23 @@ domain  ip  group  delay_ms  speed_mb_s  loss_percent  colo  verified_at  http_c
 ```
 
 只有 `status=VERIFIED` 或 `status=RETAINED` 且通过 Mac 本地 HTTPS 检测的精确 FQDN 才会被应用。`RETAINED` 表示 NAS 本轮没有可靠的新候选，继续沿用上一次已应用映射。通配符、协议、路径、端口、空格和重复域名都会被拒绝。
+
+
+## CFHost schema 2 空映射
+
+CFHost v0.3 的 `status.json` 使用 schema 2。
+
+当 NAS 已确认所有受管映射都失效时，会原子发布：
+
+```json
+{
+  "schema": 2,
+  "domain_count": 0
+}
+```
+
+并同时发布只有表头的 `hosts-map.tsv`。
+
+macOS / Windows 客户端只在同时满足这两个条件时把“0 条映射”视为一个明确的远端状态，并清空各自的同步 Marker。这样 NAS 清除失效映射后，客户端不会继续保留旧 Cloudflare IP。
+
+如果 `hosts-map.tsv` 意外为空、损坏，或者旧 schema 没有明确声明 `domain_count=0`，客户端仍保持原来的保护行为：停止更新并保留当前 Hosts。

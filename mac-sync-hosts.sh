@@ -167,6 +167,13 @@ if ! fetch_repo_file hosts-map.tsv "$MAP_FILE"; then
 fi
 fetch_repo_file status.json "$STATUS_FILE" 2>/dev/null || true
 
+REMOTE_EXPLICIT_EMPTY=0
+if [ -s "$STATUS_FILE" ] &&
+   grep -Eq '"schema"[[:space:]]*:[[:space:]]*[2-9][0-9]*' "$STATUS_FILE" &&
+   grep -Eq '"domain_count"[[:space:]]*:[[:space:]]*0([,[:space:]]|$)' "$STATUS_FILE"; then
+    REMOTE_EXPLICIT_EMPTY=1
+fi
+
 # 只接受 Hosts Manager 的 VERIFIED 或 RETAINED 记录。RETAINED 表示本轮没有
 # 可靠的新候选，所以沿用上一次已应用映射；但仍必须通过本机实际 HTTPS 检测。
 # 域名必须是精确 FQDN，禁止协议、路径、端口、通配符和空格；同一域名只取第一条。
@@ -263,7 +270,9 @@ fi
 
 LC_ALL=C sort -k2,2 "$BLOCK_FILE" -o "$BLOCK_FILE" || die 'cannot sort verified mappings'
 
-[ -s "$BLOCK_FILE" ] || die 'hosts-map.tsv has no verified mappings'
+if [ ! -s "$BLOCK_FILE" ] && [ "$REMOTE_EXPLICIT_EMPTY" -ne 1 ]; then
+    die 'hosts-map.tsv has no verified mappings and status.json does not declare an explicit empty schema-2 map'
+fi
 
 # 用 awk 重建期望文件；新 Marker 外所有非旧内容原样保留。
 # 已知旧脚本 PT-CLOUDFLARE-MANAGED 区域只在完整成对出现时移除；如果旧
@@ -320,6 +329,9 @@ fi
 
 printf 'GitHub source: %s\n' "$RAW_BASE_URL/hosts-map.tsv"
 printf 'Accepted mappings: %s\n' "$(wc -l < "$BLOCK_FILE" | tr -d ' ')"
+if [ "$REMOTE_EXPLICIT_EMPTY" -eq 1 ]; then
+    printf 'Remote map state: explicit empty mapping set (schema >= 2)\n'
+fi
 printf 'Local Hosts Marker: %s\n' "$(grep -F -c "$BEGIN_MARKER" "$HOSTS_FILE" || true)"
 printf 'Legacy PT Marker: %s\n' "$(grep -F -c "$LEGACY_BEGIN_MARKER" "$HOSTS_FILE" || true)"
 if [ "$MODE" != status ] && [ "$VERIFY_BEFORE_APPLY" = true ]; then
