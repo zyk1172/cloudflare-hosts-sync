@@ -1,9 +1,12 @@
 {
-  "schema": 1,
-  "generated_at": "2026-09-22T04:20:08+0800",
-  "source": "QNAP Cloudflare Hosts Manager",
+  "bandwidth_count": 0,
+  "domain_count": 14,
+  "generated_at": "2026-09-22T05:04:38+08:00",
+  "last_refresh": "2026-09-22T05:01:27+08:00",
+  "last_run": "2026-09-22T04:58:05+08:00",
+  "latency_count": 14,
   "map_file": "hosts-map.tsv",
-  "domain_count": 11,
-  "latency_count": 11,
-  "bandwidth_count": 0
+  "schema": 2,
+  "signature": "ea0c6952838cc69c609e712628c6de040bf356ca05cb4cbd57aabd2e6a3ac18a",
+  "source": "CFHost"
 }
