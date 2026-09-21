@@ -14,20 +14,22 @@ QNAP Cloudflare Hosts Manager
                 ↓
 macOS mac-sync-hosts.sh
         ├─ 直接拉取 hosts-map.tsv（不 clone 仓库）
-        ├─ 校验精确 FQDN、IP 和 VERIFIED/RETAINED 状态
+        ├─ 校验精确 FQDN、IP 和策略状态
         ├─ 清理已知旧 PT-CLOUDFLARE-MANAGED Marker
-        ├─ 逐域名 HTTPS 检测，默认拒绝 HTTP 000/403
+        ├─ latency/bandwidth 逐域名 HTTPS 检测
+        └─ normal 直接应用 CFST 选择结果，不做 HTTPS 二次验证
         └─ 只更新本机 /etc/hosts 的 CF-YX-MAC-SYNC Marker
                 ↓
 Windows cloudflare-hosts-sync.ps1
         ├─ 直接拉取同一份 hosts-map.tsv（不 clone 仓库）
-        ├─ 使用 Windows 内置 curl.exe 逐域名执行 HTTPS 检测
+        ├─ latency/bandwidth 使用 curl.exe 做 HTTPS 检测
+        ├─ normal 跳过域名检测并直接应用
         └─ 只更新 Windows Hosts 的 CF-YX-WIN-SYNC Marker
 ```
 
-NAS 不会上传 yx-tools 的完整候选池、配置文件、日志、Tracker 凭据或 Token。仓库只保存逐域名的已验证映射和非敏感状态摘要。
+NAS 不会上传完整候选池、配置文件、日志、Tracker 凭据或 Token。仓库只保存逐域名映射和非敏感状态摘要；normal 策略记录会明确标记为 SELECTED，而不是伪装成 VERIFIED。
 
-macOS 端不会重新测速，也不会扫描 DNS；它会对仓库映射逐域名执行一次真实 GET HTTPS 检测。默认拒绝 HTTP 000 和 403，避免把已知无法打开或无法做种的 IP 写入本机 Hosts。
+macOS 端不会重新测速，也不会扫描 DNS。latency / bandwidth 映射会逐域名执行一次真实 GET HTTPS 检测，默认拒绝 HTTP 000 和 403；normal 映射按策略定义直接应用，不再做域名 HTTPS 二次验证。
 
 ## macOS 使用
 
@@ -190,7 +192,13 @@ $env:CLOUDFLARE_HOSTS_REJECT_HTTP_CODES = '000,403'
 domain  ip  group  delay_ms  speed_mb_s  loss_percent  colo  verified_at  http_code  status
 ```
 
-只有 `status=VERIFIED` 或 `status=RETAINED` 且通过 Mac 本地 HTTPS 检测的精确 FQDN 才会被应用。`RETAINED` 表示 NAS 本轮没有可靠的新候选，继续沿用上一次已应用映射。通配符、协议、路径、端口、空格和重复域名都会被拒绝。
+schema 3 支持三种策略类别：
+
+- `latency`：状态为 `VERIFIED` / `RETAINED`，客户端继续执行本地 HTTPS 验证。
+- `bandwidth`：状态为 `VERIFIED` / `RETAINED`，客户端继续执行本地 HTTPS 验证。
+- `normal`：状态必须为 `SELECTED`，表示 NAS 已按 CFST 最低延迟直接选中；Mac / Windows 客户端跳过域名 HTTPS 二次验证并直接写入 Hosts。
+
+`RETAINED` 表示 NAS 本轮没有可靠的新候选，继续沿用上一次已应用映射。通配符、协议、路径、端口、空格和重复域名都会被拒绝。
 
 
 ## CFHost schema 2 空映射
@@ -211,3 +219,25 @@ CFHost v0.3 的 `status.json` 使用 schema 2。
 macOS / Windows 客户端只在同时满足这两个条件时把“0 条映射”视为一个明确的远端状态，并清空各自的同步 Marker。这样 NAS 清除失效映射后，客户端不会继续保留旧 Cloudflare IP。
 
 如果 `hosts-map.tsv` 意外为空、损坏，或者旧 schema 没有明确声明 `domain_count=0`，客户端仍保持原来的保护行为：停止更新并保留当前 Hosts。
+
+
+## CFHost schema 3 normal 策略
+
+CFHost 引入 `normal` 策略后，`status.json` 使用 schema 3，并增加：
+
+```json
+{
+  "schema": 3,
+  "normal_count": 1
+}
+```
+
+对应 `hosts-map.tsv` 记录示例：
+
+```text
+plain.example.com	104.16.0.9	normal	11	6	0.1	HKG	2026-09-22T01:00:00+08:00	-	SELECTED
+```
+
+`normal + SELECTED` 的含义是：该 IP 由 CFST 候选直接按延迟选择，没有经过目标域名 HTTP / Tracker 有效性验证。因此同步客户端必须保持同样语义，不再自行对该记录做 HTTPS 检测。
+
+schema 2 的 latency / bandwidth 映射继续兼容；schema >= 2 的显式空映射规则也保持不变。

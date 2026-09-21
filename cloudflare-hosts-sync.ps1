@@ -134,7 +134,7 @@ function Get-MapRecords {
         if (-not $trimmed -or $trimmed.StartsWith('#')) {
             continue
         }
-        $fields = $line -split "`t", -1
+        $fields = [regex]::Split($line, "`t")
         if ($fields.Count -lt 10) {
             $invalid = $true
             continue
@@ -143,10 +143,15 @@ function Get-MapRecords {
         $ip = $fields[1].Trim()
         $group = $fields[2].Trim()
         $status = $fields[9].Trim()
+        $statusValid = if ($group -eq 'normal') {
+            $status -eq 'SELECTED'
+        } else {
+            $status -in @('VERIFIED', 'RETAINED')
+        }
         if (-not (Test-ExactDomain $domain) -or
             -not (Test-ValidIp $ip) -or
-            $group -notin @('latency', 'bandwidth') -or
-            $status -notin @('VERIFIED', 'RETAINED')) {
+            $group -notin @('latency', 'bandwidth', 'normal') -or
+            -not $statusValid) {
             $invalid = $true
             continue
         }
@@ -239,8 +244,9 @@ try {
     }
 
     $curl = Get-Command curl.exe -ErrorAction SilentlyContinue
-    if ($Mode -ne 'status' -and $VerifyBeforeApply -and -not $curl) {
-        throw 'curl.exe is required for per-domain HTTPS verification. Install/use Windows 10 or Windows 11 built-in curl.exe.'
+    $requiresCurl = @($records | Where-Object { $_.Group -ne 'normal' }).Count -gt 0
+    if ($Mode -ne 'status' -and $VerifyBeforeApply -and $requiresCurl -and -not $curl) {
+        throw 'curl.exe is required for latency/bandwidth HTTPS verification. Install/use Windows 10 or Windows 11 built-in curl.exe.'
     }
     $curlPath = $null
     if ($curl) {
@@ -263,10 +269,17 @@ try {
     $verificationLines = New-Object 'System.Collections.Generic.List[string]'
     $passed = 0
     $rejected = 0
+    $normalSkipped = 0
     $index = 0
     foreach ($record in $records) {
         $index++
         if ($Mode -eq 'status' -or -not $VerifyBeforeApply) {
+            $blockLines.Add("$($record.Ip)`t$($record.Domain)")
+            continue
+        }
+        if ($record.Group -eq 'normal') {
+            $normalSkipped++
+            $verificationLines.Add("SKIP $($record.Domain) $($record.Ip) NORMAL selected_by_cfst")
             $blockLines.Add("$($record.Ip)`t$($record.Domain)")
             continue
         }
@@ -359,7 +372,7 @@ try {
     Write-Output "Local Windows Marker: $(@($currentLines | Where-Object { $_ -ceq $BeginMarker }).Count)"
     Write-Output "Legacy PT Marker: $(@($currentLines | Where-Object { $_ -ceq $LegacyBeginMarker }).Count)"
     if ($Mode -ne 'status' -and $VerifyBeforeApply) {
-        Write-Output "HTTPS verification: passed=$passed rejected=$rejected reject_http_codes=$($RejectHttpCodes -join ',')"
+        Write-Output "HTTPS verification: passed=$passed rejected=$rejected normal_skipped=$normalSkipped reject_http_codes=$($RejectHttpCodes -join ',')"
         if ($Mode -eq 'dry-run' -or $rejected -gt 0) {
             $verificationLines | ForEach-Object { Write-Output $_ }
         }
