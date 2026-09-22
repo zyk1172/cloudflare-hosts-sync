@@ -2,14 +2,13 @@
 api.m-team.cc	162.159.38.81	normal	-	-	-	-	2026-09-23T06:17:59+08:00	-	SELECTED
 h5.m-team.cc	172.64.145.61	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
 hdtime.org	162.159.38.81	normal	-	-	-	-	2026-09-23T06:17:59+08:00	-	SELECTED
-kp.m-team.cc	104.18.37.28	bandwidth	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
-ob.m-team.cc	172.64.145.61	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
+kp.m-team.cc	104.18.37.28	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
 pt.xingyungept.org	172.64.145.61	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
 ptcafe.club	162.159.38.81	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
 ptzone.xyz	172.64.145.61	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
+static.m-team.cc	172.64.145.61	latency	-	-	-	-	2026-09-23T06:33:22+08:00	200	VERIFIED
 tracker.m-team.cc	172.64.145.61	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
 tracker.m-team.io	172.64.145.61	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
 tracker.ptcafe.club	162.159.38.81	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
 tracker.xingyungept.org	104.18.37.28	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
 www.pttime.org	172.64.145.61	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
-zp.m-team.io	172.64.145.61	latency	-	-	-	-	2026-09-23T06:17:59+08:00	200	VERIFIED
