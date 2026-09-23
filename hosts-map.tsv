@@ -1,11 +1,6 @@
 # domain	ip	group	delay_ms	speed_mb_s	loss_percent	colo	verified_at	http_code	status
-h5.m-team.cc	104.18.37.28	latency	-	-	-	-	2026-09-23T10:11:53+08:00	200	VERIFIED
-hdtime.org	162.159.44.120	normal	74.26	41.09	0	NRT	2026-09-23T10:11:53+08:00	-	SELECTED
-kp.m-team.cc	104.18.37.28	latency	-	-	-	-	2026-09-23T10:11:53+08:00	200	VERIFIED
-ptcafe.club	162.159.44.120	latency	74.26	41.09	0	NRT	2026-09-23T10:11:53+08:00	200	VERIFIED
-static.m-team.cc	104.18.37.28	latency	-	-	-	-	2026-09-23T10:11:53+08:00	200	VERIFIED
-tracker.hdtime.org	162.159.44.120	normal	74.26	41.09	0	NRT	2026-09-23T10:11:53+08:00	-	SELECTED
-tracker.m-team.cc	104.18.37.28	latency	-	-	-	-	2026-09-23T10:11:53+08:00	200	VERIFIED
-tracker.m-team.io	104.18.37.28	latency	-	-	-	-	2026-09-23T10:11:53+08:00	200	VERIFIED
-tracker.ptcafe.club	162.159.44.120	latency	74.26	41.09	0	NRT	2026-09-23T10:11:53+08:00	200	VERIFIED
-www.pttime.org	172.64.229.166	latency	-	-	-	-	2026-09-23T10:11:53+08:00	200	VERIFIED
+hdtime.org	162.159.44.120	normal	74.26	41.09	0	NRT	2026-09-23T12:03:08+08:00	-	SELECTED
+ptcafe.club	162.159.44.120	latency	74.26	41.09	0	NRT	2026-09-23T12:03:08+08:00	200	VERIFIED
+tracker.hdtime.org	162.159.44.120	normal	74.26	41.09	0	NRT	2026-09-23T12:03:08+08:00	-	SELECTED
+tracker.ptcafe.club	162.159.44.120	latency	74.26	41.09	0	NRT	2026-09-23T12:03:08+08:00	200	VERIFIED
+www.pttime.org	172.64.229.166	latency	-	-	-	-	2026-09-23T12:03:08+08:00	200	VERIFIED
