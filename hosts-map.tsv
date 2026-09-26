@@ -1,5 +1,4 @@
 # domain	ip	group	delay_ms	speed_mb_s	loss_percent	colo	verified_at	http_code	status
-api.m-team.cc	162.159.45.191	normal	74.89	43.55	0	NRT	2026-09-27T02:50:00+08:00	-	SELECTED
 h5.m-team.cc	172.64.147.227	latency	-	-	-	-	2026-09-27T02:39:02+08:00	200	VERIFIED
 hdtime.org	104.18.39.11	bandwidth	-	-	-	-	2026-09-27T02:39:02+08:00	200	VERIFIED
 kp.m-team.cc	172.64.147.227	latency	-	-	-	-	2026-09-27T02:39:02+08:00	200	VERIFIED
