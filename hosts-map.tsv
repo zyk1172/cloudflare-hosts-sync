@@ -1,17 +1,11 @@
 # domain	ip	group	delay_ms	speed_mb_s	loss_percent	colo	verified_at	http_code	status
-api.m-team.cc	104.18.32.17	latency	-	-	-	-	2026-09-27T05:04:54+08:00	-	VERIFIED
-h5.m-team.cc	104.18.32.17	latency	-	-	-	-	2026-09-27T05:04:54+08:00	-	VERIFIED
-hdtime.org	104.18.39.11	bandwidth	-	-	-	-	2026-09-27T05:04:54+08:00	200	VERIFIED
-kp.m-team.cc	104.18.32.17	latency	-	-	-	-	2026-09-27T05:04:54+08:00	200	VERIFIED
-ob.m-team.cc	104.18.32.17	latency	-	-	-	-	2026-09-27T05:04:54+08:00	-	VERIFIED
-pt.xingyungept.org	104.18.32.17	latency	-	-	-	-	2026-09-27T05:04:54+08:00	200	VERIFIED
-ptcafe.club	162.159.44.59	latency	-	-	-	-	2026-09-27T05:04:54+08:00	200	VERIFIED
-ptzone.xyz	172.64.159.149	latency	-	-	-	-	2026-09-27T05:04:54+08:00	200	VERIFIED
-static.m-team.cc	104.18.32.17	latency	-	-	-	-	2026-09-27T05:04:54+08:00	-	VERIFIED
-tracker.hdtime.org	172.64.147.151	latency	92.35	11.98	0	SIN	2026-09-27T05:04:54+08:00	200	VERIFIED
-tracker.m-team.cc	108.162.198.130	normal	-	-	-	-	2026-09-27T05:04:54+08:00	-	SELECTED
-tracker.m-team.io	108.162.198.130	normal	-	-	-	-	2026-09-27T05:04:54+08:00	-	SELECTED
-tracker.ptcafe.club	172.64.52.2	latency	75.72	11.35	0	NRT	2026-09-27T05:04:54+08:00	200	VERIFIED
-tracker.xingyungept.org	172.64.147.151	latency	92.35	11.98	0	SIN	2026-09-27T05:04:54+08:00	200	VERIFIED
-www.pttime.org	104.18.39.11	latency	-	-	-	-	2026-09-27T05:04:54+08:00	200	VERIFIED
-zp.m-team.io	104.18.32.17	latency	-	-	-	-	2026-09-27T05:04:54+08:00	-	VERIFIED
+tracker.m-team.cc	172.64.159.229	latency	93.38	4.8	0	SIN	2026-09-27T05:02:48+0800	200	VERIFIED
+tracker.m-team.io	172.64.159.229	latency	93.38	4.8	0	SIN	2026-09-27T05:02:48+0800	200	VERIFIED
+h5.m-team.cc	172.64.159.229	latency	93.38	4.8	0	SIN	2026-09-27T05:04:58+0800	200	VERIFIED
+tracker.ptcafe.club	162.159.44.235	latency	75.18	5.97	0	NRT	2026-09-27T05:05:37+0800	200	VERIFIED
+ptcafe.club	162.159.44.235	latency	75.18	5.97	0	NRT	2026-09-27T05:05:38+0800	200	VERIFIED
+tracker.xingyungept.org	172.64.159.229	latency	93.38	4.8	0	SIN	2026-09-27T05:05:38+0800	200	VERIFIED
+pt.xingyungept.org	172.64.159.229	latency	93.38	4.8	0	SIN	2026-09-27T05:05:39+0800	200	VERIFIED
+tracker.hdtime.org	172.64.159.229	latency	93.38	4.8	0	SIN	2026-09-27T05:05:44+0800	200	VERIFIED
+hdtime.org	172.64.159.229	latency	93.38	4.8	0	SIN	2026-09-27T05:05:45+0800	200	VERIFIED
+ptzone.xyz	172.64.159.229	latency	93.38	4.8	0	SIN	2026-09-27T05:05:45+0800	200	VERIFIED
