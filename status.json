@@ -1,13 +1,13 @@
 {
   "bandwidth_count": 1,
   "domain_count": 16,
-  "generated_at": "2026-09-28T01:44:02+08:00",
-  "last_refresh": "2026-09-28T01:41:18+08:00",
-  "last_run": "2026-09-28T01:10:49+08:00",
+  "generated_at": "2026-09-28T03:54:54+08:00",
+  "last_refresh": "2026-09-28T03:48:17+08:00",
+  "last_run": "2026-09-28T03:17:53+08:00",
   "latency_count": 15,
   "map_file": "hosts-map.tsv",
   "normal_count": 0,
   "schema": 3,
-  "signature": "7ff19248e9612718af665ea66145cafbd606e280d5bbc0985b5c415233959d00",
+  "signature": "7cf9a8e9910bc4d118e67b211f9fd58ef1468062262be6028dc6e740d8311e25",
   "source": "CFHost"
 }
