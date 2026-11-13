@@ -1,17 +1,17 @@
 # domain	ip	group	delay_ms	speed_mb_s	loss_percent	colo	verified_at	http_code	status	follow_target
-api.m-team.cc	104.18.42.3	latency	-	-	-	-	2026-11-13T15:56:42+08:00	200	VERIFIED	
-h5.m-team.cc	104.18.42.3	follow	-	-	-	-	-	-	FOLLOWED	kp.m-team.cc
-hdtime.org	104.18.42.3	latency	-	-	-	-	2026-11-13T15:56:42+08:00	200	VERIFIED	
-kp.m-team.cc	104.18.42.3	latency	-	-	-	-	2026-11-13T15:56:42+08:00	200	VERIFIED	
-ob.m-team.cc	104.18.42.3	follow	-	-	-	-	-	-	FOLLOWED	kp.m-team.cc
-pt.xingyungept.org	104.18.44.17	latency	-	-	-	-	2026-11-13T15:56:42+08:00	200	VERIFIED	
-ptcafe.club	104.18.42.3	latency	-	-	-	-	2026-11-13T15:56:42+08:00	200	VERIFIED	
-ptzone.xyz	172.64.155.254	latency	-	-	-	-	2026-11-13T15:56:42+08:00	200	VERIFIED	
-static.m-team.cc	104.18.42.3	follow	-	-	-	-	-	-	FOLLOWED	api.m-team.cc
-tracker.hdtime.org	104.18.42.3	latency	-	-	-	-	2026-11-13T15:56:42+08:00	200	VERIFIED	
-tracker.m-team.cc	104.18.42.3	follow	-	-	-	-	-	-	FOLLOWED	kp.m-team.cc
-tracker.m-team.io	104.18.42.3	follow	-	-	-	-	-	-	FOLLOWED	kp.m-team.cc
-tracker.ptcafe.club	104.18.42.3	latency	-	-	-	-	2026-11-13T15:56:42+08:00	200	VERIFIED	
+api.m-team.cc	104.18.44.17	latency	-	-	-	-	2026-11-13T19:08:13+08:00	200	VERIFIED	
+h5.m-team.cc	104.18.44.17	follow	-	-	-	-	-	-	FOLLOWED	kp.m-team.cc
+hdtime.org	104.18.44.17	latency	-	-	-	-	2026-11-13T19:08:13+08:00	200	VERIFIED	
+kp.m-team.cc	104.18.44.17	latency	-	-	-	-	2026-11-13T19:08:13+08:00	200	VERIFIED	
+ob.m-team.cc	104.18.44.17	follow	-	-	-	-	-	-	FOLLOWED	kp.m-team.cc
+pt.xingyungept.org	104.18.44.17	latency	-	-	-	-	2026-11-13T19:08:13+08:00	200	VERIFIED	
+ptcafe.club	104.18.44.17	latency	-	-	-	-	2026-11-13T19:08:13+08:00	200	VERIFIED	
+ptzone.xyz	172.64.155.254	latency	-	-	-	-	2026-11-13T19:08:13+08:00	200	VERIFIED	
+static.m-team.cc	104.18.44.17	follow	-	-	-	-	-	-	FOLLOWED	api.m-team.cc
+tracker.hdtime.org	104.18.44.17	latency	-	-	-	-	2026-11-13T19:08:13+08:00	200	VERIFIED	
+tracker.m-team.cc	104.18.44.17	follow	-	-	-	-	-	-	FOLLOWED	kp.m-team.cc
+tracker.m-team.io	104.18.44.17	follow	-	-	-	-	-	-	FOLLOWED	kp.m-team.cc
+tracker.ptcafe.club	104.18.44.17	latency	-	-	-	-	2026-11-13T19:08:13+08:00	200	VERIFIED	
 tracker.xingyungept.org	104.18.33.51	latency	-	-	-	-	2026-11-04T08:36:05+08:00	200	VERIFIED	
-www.pttime.org	162.159.23.179	latency	-	-	-	-	2026-11-13T15:56:42+08:00	200	VERIFIED	
-zp.m-team.io	104.18.42.3	follow	-	-	-	-	-	-	FOLLOWED	kp.m-team.cc
+www.pttime.org	162.159.23.179	latency	-	-	-	-	2026-11-13T19:08:13+08:00	200	VERIFIED	
+zp.m-team.io	104.18.44.17	follow	-	-	-	-	-	-	FOLLOWED	kp.m-team.cc
