@@ -1,17 +1,17 @@
 # domain	ip	group	delay_ms	speed_mb_s	loss_percent	colo	verified_at	http_code	status	follow_target
-api.m-team.cc	172.64.154.213	latency	94.16	34.84	0	SIN	2026-11-20T02:17:45+08:00	200	VERIFIED	
-h5.m-team.cc	172.64.154.213	follow	94.16	34.84	0	SIN	-	-	FOLLOWED	kp.m-team.cc
-hdtime.org	172.64.154.213	latency	94.16	34.84	0	SIN	2026-11-20T02:17:45+08:00	200	VERIFIED	
-kp.m-team.cc	172.64.154.213	latency	94.16	34.84	0	SIN	2026-11-20T02:17:45+08:00	200	VERIFIED	
-ob.m-team.cc	172.64.154.213	follow	94.16	34.84	0	SIN	-	-	FOLLOWED	kp.m-team.cc
-pt.xingyungept.org	172.64.154.213	latency	94.16	34.84	0	SIN	2026-11-20T02:17:45+08:00	200	VERIFIED	
-ptcafe.club	162.159.1.224	latency	91.29	33.89	0	SIN	2026-11-20T02:17:45+08:00	200	VERIFIED	
-ptzone.xyz	172.64.154.213	latency	94.16	34.84	0	SIN	2026-11-20T02:17:45+08:00	200	VERIFIED	
-static.m-team.cc	172.64.154.213	follow	94.16	34.84	0	SIN	-	-	FOLLOWED	api.m-team.cc
-tracker.hdtime.org	172.64.154.213	latency	94.16	34.84	0	SIN	2026-11-20T02:17:45+08:00	200	VERIFIED	
-tracker.m-team.cc	172.64.154.213	follow	94.16	34.84	0	SIN	-	-	FOLLOWED	kp.m-team.cc
-tracker.m-team.io	172.64.154.213	follow	94.16	34.84	0	SIN	-	-	FOLLOWED	kp.m-team.cc
-tracker.ptcafe.club	162.159.1.224	latency	91.29	33.89	0	SIN	2026-11-20T02:17:45+08:00	200	VERIFIED	
-tracker.xingyungept.org	172.64.154.213	latency	94.16	34.84	0	SIN	2026-11-20T02:17:45+08:00	200	VERIFIED	
-www.pttime.org	172.64.41.54	latency	-	-	-	-	2026-11-20T02:17:45+08:00	200	VERIFIED	
-zp.m-team.io	172.64.154.213	follow	94.16	34.84	0	SIN	-	-	FOLLOWED	kp.m-team.cc
+api.m-team.cc	104.18.45.221	latency	90.45	53.99	0	SIN	2026-11-20T06:20:54+08:00	200	VERIFIED	
+h5.m-team.cc	104.18.45.221	follow	90.45	53.99	0	SIN	-	-	FOLLOWED	kp.m-team.cc
+hdtime.org	104.18.45.221	latency	90.45	53.99	0	SIN	2026-11-20T06:20:54+08:00	200	VERIFIED	
+kp.m-team.cc	104.18.45.221	latency	90.45	53.99	0	SIN	2026-11-20T06:20:54+08:00	200	VERIFIED	
+ob.m-team.cc	104.18.45.221	follow	90.45	53.99	0	SIN	-	-	FOLLOWED	kp.m-team.cc
+pt.xingyungept.org	104.18.45.221	latency	90.45	53.99	0	SIN	2026-11-20T06:20:54+08:00	200	VERIFIED	
+ptcafe.club	162.159.58.34	latency	91.99	38.7	0	SIN	2026-11-20T06:20:54+08:00	200	VERIFIED	
+ptzone.xyz	104.18.45.221	latency	90.45	53.99	0	SIN	2026-11-20T06:20:54+08:00	200	VERIFIED	
+static.m-team.cc	104.18.45.221	follow	90.45	53.99	0	SIN	-	-	FOLLOWED	api.m-team.cc
+tracker.hdtime.org	104.18.45.221	latency	90.45	53.99	0	SIN	2026-11-20T06:20:54+08:00	200	VERIFIED	
+tracker.m-team.cc	104.18.45.221	follow	90.45	53.99	0	SIN	-	-	FOLLOWED	kp.m-team.cc
+tracker.m-team.io	104.18.45.221	follow	90.45	53.99	0	SIN	-	-	FOLLOWED	kp.m-team.cc
+tracker.ptcafe.club	162.159.58.34	latency	91.99	38.7	0	SIN	2026-11-20T06:20:54+08:00	200	VERIFIED	
+tracker.xingyungept.org	104.18.45.221	latency	90.45	53.99	0	SIN	2026-11-20T06:20:54+08:00	200	VERIFIED	
+www.pttime.org	172.64.41.54	latency	-	-	-	-	2026-11-20T06:20:54+08:00	200	VERIFIED	
+zp.m-team.io	104.18.45.221	follow	90.45	53.99	0	SIN	-	-	FOLLOWED	kp.m-team.cc
