@@ -1,17 +1,17 @@
 # domain	ip	group	delay_ms	speed_mb_s	loss_percent	colo	verified_at	http_code	status	follow_target
-api.m-team.cc	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T07:29:46.228562657+08:00	200	VERIFIED	
+api.m-team.cc	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T08:10:41.755239743+08:00	200	VERIFIED	
 h5.m-team.cc	104.18.38.110	follow	95.28	0	0	N/A	-	-	FOLLOWED	kp.m-team.cc
-hdtime.org	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T07:29:46.228559615+08:00	200	VERIFIED	
-kp.m-team.cc	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T07:29:46.228557177+08:00	200	VERIFIED	
+hdtime.org	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T08:10:41.755238859+08:00	200	VERIFIED	
+kp.m-team.cc	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T08:10:41.755229973+08:00	200	VERIFIED	
 ob.m-team.cc	104.18.38.110	follow	95.28	0	0	N/A	-	-	FOLLOWED	kp.m-team.cc
-pt.xingyungept.org	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T07:29:46.228558375+08:00	200	VERIFIED	
-ptcafe.club	162.159.13.166	latency	92.6	0	0	N/A	2026-11-25T07:10:11.733782037+08:00	200	VERIFIED	
-ptzone.xyz	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T07:29:46.228560865+08:00	200	VERIFIED	
+pt.xingyungept.org	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T08:10:41.755232756+08:00	200	VERIFIED	
+ptcafe.club	162.159.44.253	latency	92.63	0	0	N/A	2026-11-25T08:16:27.861672931+08:00	200	VERIFIED	
+ptzone.xyz	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T08:10:41.755240702+08:00	200	VERIFIED	
 static.m-team.cc	104.18.38.110	follow	95.28	0	0	N/A	-	-	FOLLOWED	api.m-team.cc
-tracker.hdtime.org	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T07:29:46.228561731+08:00	200	VERIFIED	
+tracker.hdtime.org	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T08:10:41.755237761+08:00	200	VERIFIED	
 tracker.m-team.cc	104.18.38.110	follow	95.28	0	0	N/A	-	-	FOLLOWED	kp.m-team.cc
 tracker.m-team.io	104.18.38.110	follow	95.28	0	0	N/A	-	-	FOLLOWED	kp.m-team.cc
-tracker.ptcafe.club	162.159.13.166	latency	92.6	0	0	N/A	2026-11-25T07:10:11.733780087+08:00	200	VERIFIED	
-tracker.xingyungept.org	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T07:29:46.228555578+08:00	200	VERIFIED	
-www.pttime.org	162.159.13.166	latency	92.6	0	0	N/A	2026-11-25T07:10:11.734679879+08:00	200	VERIFIED	
+tracker.ptcafe.club	162.159.44.253	latency	92.63	0	0	N/A	2026-11-25T08:16:27.861674508+08:00	200	VERIFIED	
+tracker.xingyungept.org	104.18.38.110	latency	95.28	0	0	N/A	2026-11-25T08:10:41.755231714+08:00	200	VERIFIED	
+www.pttime.org	162.159.44.253	latency	92.63	0	0	N/A	2026-11-25T08:16:27.861675821+08:00	200	VERIFIED	
 zp.m-team.io	104.18.38.110	follow	95.28	0	0	N/A	-	-	FOLLOWED	kp.m-team.cc
