@@ -1,7 +1,7 @@
 # domain	ip	group	delay_ms	speed_mb_s	loss_percent	colo	verified_at	http_code	status	follow_target
 api.m-team.cc	104.18.32.216	latency	-	-	-	-	2026-11-29T01:11:59.181397637+08:00	200	VERIFIED	
 h5.m-team.cc	172.64.148.217	follow	90.16	0	0	N/A	-	-	FOLLOWED	kp.m-team.cc
-hdtime.org	172.64.151.231	latency	90.15	0	0	N/A	2026-11-29T00:40:16.466579242+08:00	-	VERIFIED	
+hdtime.org	172.64.148.217	latency	90.16	0	0	N/A	2026-11-29T01:17:20.353799639+08:00	200	VERIFIED	
 kp.m-team.cc	172.64.148.217	latency	90.16	0	0	N/A	2026-11-29T01:15:39.181790361+08:00	200	VERIFIED	
 ob.m-team.cc	172.64.148.217	follow	90.16	0	0	N/A	-	-	FOLLOWED	kp.m-team.cc
 pt.xingyungept.org	172.64.148.217	latency	90.16	0	0	N/A	2026-11-29T01:11:59.181392024+08:00	200	VERIFIED	
